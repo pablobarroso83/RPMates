@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.RPMates" parent="android:Theme.Material.Light.NoActionBar">
+
+    </style>
+<!--
+    <style name="Theme.RPMates.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/vinyl</item>
+        <item name="postSplashScreenTheme">@style/Theme.RPMates</item>
+    </style> -->
+
+
+</resources>
