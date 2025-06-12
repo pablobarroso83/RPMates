@@ -12,5 +12,11 @@ data class Playlist(
     val id: Int = 0,
     val titulo: String,
     val descripcion: String,
-    val vinilos: List<String>
+    val vinilos: List<String>,
+    val createdBy: Int = 0,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isPublic: Boolean = true,
+    val genre: String = "",
+    val tags: List<String> = emptyList()
 )

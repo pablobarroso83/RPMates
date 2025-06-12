@@ -3,7 +3,9 @@ package com.rpmates.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,11 +27,25 @@ fun RegisterScreen(
     viewModel: UserViewModel
 ) {
     var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var dateOfBirth by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+
+    // Validaciones
+    val isUsernameValid = username.length >= 3
+    val isEmailValid = email.contains("@") && email.contains(".")
+    val isPasswordValid = password.length >= 6
+    val doPasswordsMatch = password == confirmPassword
+    val isFormValid = isUsernameValid && isEmailValid && isPasswordValid && 
+                     doPasswordsMatch && firstName.isNotBlank() && lastName.isNotBlank()
 
     Box(
         modifier = Modifier
@@ -39,16 +55,17 @@ fun RegisterScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
                 text = "Crear cuenta",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                modifier = Modifier.padding(vertical = 32.dp)
+                modifier = Modifier.padding(vertical = 16.dp)
             )
 
             Card(
@@ -65,16 +82,95 @@ fun RegisterScreen(
                         .padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    // Información básica
+                    Text(
+                        text = "Información personal",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = firstName,
+                            onValueChange = { 
+                                firstName = it
+                                errorMessage = null
+                            },
+                            label = { Text("Nombre *", color = Color.White) },
+                            modifier = Modifier.weight(1f),
+                            isError = firstName.isBlank() && errorMessage != null,
+                            enabled = !isLoading,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.White,
+                                unfocusedBorderColor = Color.Gray,
+                                focusedLabelColor = Color.White,
+                                unfocusedLabelColor = Color.Gray,
+                                cursorColor = Color.White,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = lastName,
+                            onValueChange = { 
+                                lastName = it
+                                errorMessage = null
+                            },
+                            label = { Text("Apellidos *", color = Color.White) },
+                            modifier = Modifier.weight(1f),
+                            isError = lastName.isBlank() && errorMessage != null,
+                            enabled = !isLoading,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.White,
+                                unfocusedBorderColor = Color.Gray,
+                                focusedLabelColor = Color.White,
+                                unfocusedLabelColor = Color.Gray,
+                                cursorColor = Color.White,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
+                        )
+                    }
+
                     OutlinedTextField(
-                        value = username,
+                        value = email,
                         onValueChange = { 
-                            username = it
+                            email = it
                             errorMessage = null
                         },
-                        label = { Text("Usuario", color = Color.White) },
+                        label = { Text("Email *", color = Color.White) },
                         modifier = Modifier.fillMaxWidth(),
-                        isError = errorMessage != null,
+                        isError = !isEmailValid && email.isNotEmpty(),
                         enabled = !isLoading,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.Gray,
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.Gray,
+                            cursorColor = Color.White,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        supportingText = {
+                            if (!isEmailValid && email.isNotEmpty()) {
+                                Text("Email no válido", color = Color(0xFFFF6B6B))
+                            }
+                        }
+                    )
+
+                    OutlinedTextField(
+                        value = phoneNumber,
+                        onValueChange = { phoneNumber = it },
+                        label = { Text("Teléfono", color = Color.White) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isLoading,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
                             unfocusedBorderColor = Color.Gray,
@@ -87,16 +183,12 @@ fun RegisterScreen(
                     )
 
                     OutlinedTextField(
-                        value = password,
-                        onValueChange = { 
-                            password = it
-                            errorMessage = null
-                        },
-                        label = { Text("Contraseña", color = Color.White) },
+                        value = dateOfBirth,
+                        onValueChange = { dateOfBirth = it },
+                        label = { Text("Fecha de nacimiento (DD/MM/AAAA)", color = Color.White) },
                         modifier = Modifier.fillMaxWidth(),
-                        isError = errorMessage != null,
                         enabled = !isLoading,
-                        visualTransformation = PasswordVisualTransformation(),
+                        placeholder = { Text("01/01/1990", color = Color.Gray) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
                             unfocusedBorderColor = Color.Gray,
@@ -107,16 +199,52 @@ fun RegisterScreen(
                             unfocusedTextColor = Color.White
                         )
                     )
-                
+
+                    Divider(color = Color.Gray, modifier = Modifier.padding(vertical = 8.dp))
+
+                    // Información de cuenta
+                    Text(
+                        text = "Información de cuenta",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
                     OutlinedTextField(
-                        value = confirmPassword,
+                        value = username,
                         onValueChange = { 
-                            confirmPassword = it
+                            username = it
                             errorMessage = null
                         },
-                        label = { Text("Confirmar contraseña", color = Color.White) },
+                        label = { Text("Usuario *", color = Color.White) },
                         modifier = Modifier.fillMaxWidth(),
-                        isError = errorMessage != null,
+                        isError = !isUsernameValid && username.isNotEmpty(),
+                        enabled = !isLoading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.Gray,
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.Gray,
+                            cursorColor = Color.White,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        supportingText = {
+                            if (!isUsernameValid && username.isNotEmpty()) {
+                                Text("Mínimo 3 caracteres", color = Color(0xFFFF6B6B))
+                            }
+                        }
+                    )
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { 
+                            password = it
+                            errorMessage = null
+                        },
+                        label = { Text("Contraseña *", color = Color.White) },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = !isPasswordValid && password.isNotEmpty(),
                         enabled = !isLoading,
                         visualTransformation = PasswordVisualTransformation(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -127,7 +255,39 @@ fun RegisterScreen(
                             cursorColor = Color.White,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
-                        )
+                        ),
+                        supportingText = {
+                            if (!isPasswordValid && password.isNotEmpty()) {
+                                Text("Mínimo 6 caracteres", color = Color(0xFFFF6B6B))
+                            }
+                        }
+                    )
+                
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { 
+                            confirmPassword = it
+                            errorMessage = null
+                        },
+                        label = { Text("Confirmar contraseña *", color = Color.White) },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = !doPasswordsMatch && confirmPassword.isNotEmpty(),
+                        enabled = !isLoading,
+                        visualTransformation = PasswordVisualTransformation(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.Gray,
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.Gray,
+                            cursorColor = Color.White,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        supportingText = {
+                            if (!doPasswordsMatch && confirmPassword.isNotEmpty()) {
+                                Text("Las contraseñas no coinciden", color = Color(0xFFFF6B6B))
+                            }
+                        }
                     )
 
                     errorMessage?.let {
@@ -140,19 +300,24 @@ fun RegisterScreen(
 
                     Button(
                         onClick = {
-                            if (password != confirmPassword) {
-                                errorMessage = "Las contraseñas no coinciden"
+                            if (!isFormValid) {
+                                errorMessage = "Por favor, completa todos los campos obligatorios correctamente"
                                 return@Button
                             }
-                            if (password.length < 6) {
-                                errorMessage = "La contraseña debe tener al menos 6 caracteres"
-                                return@Button
-                            }
+                            
                             scope.launch {
                                 try {
                                     isLoading = true
                                     errorMessage = null
-                                    viewModel.register(username, password).fold(
+                                    viewModel.register(
+                                        username = username,
+                                        password = password,
+                                        email = email,
+                                        firstName = firstName,
+                                        lastName = lastName,
+                                        phoneNumber = phoneNumber,
+                                        dateOfBirth = dateOfBirth
+                                    ).fold(
                                         onSuccess = {
                                             onRegisterSuccess()
                                         },
@@ -170,7 +335,7 @@ fun RegisterScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        enabled = !isLoading,
+                        enabled = !isLoading && isFormValid,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.White,
                             contentColor = Color.Black
