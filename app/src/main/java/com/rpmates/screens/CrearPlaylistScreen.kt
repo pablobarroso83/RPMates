@@ -2,8 +2,6 @@ package com.rpmates.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,17 +21,7 @@ fun CrearPlaylistScreen(
     var titulo by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
     var vinilos by remember { mutableStateOf("") }
-    var genre by remember { mutableStateOf("") }
-    var tags by remember { mutableStateOf("") }
-    var isPublic by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    val scrollState = rememberScrollState()
-
-    // Validaciones
-    val isTituloValid = titulo.isNotBlank()
-    val isDescripcionValid = descripcion.isNotBlank()
-    val isVinilosValid = vinilos.isNotBlank()
-    val isFormValid = isTituloValid && isDescripcionValid && isVinilosValid
 
     Box(
         modifier = Modifier
@@ -43,7 +31,6 @@ fun CrearPlaylistScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -75,9 +62,8 @@ fun CrearPlaylistScreen(
                             titulo = it
                             errorMessage = null
                         },
-                        label = { Text("Título *", color = Color.White) },
+                        label = { Text("Título", color = Color.White) },
                         modifier = Modifier.fillMaxWidth(),
-                        isError = !isTituloValid && titulo.isNotEmpty(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
                             unfocusedBorderColor = Color.Gray,
@@ -86,12 +72,7 @@ fun CrearPlaylistScreen(
                             cursorColor = Color.White,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
-                        ),
-                        supportingText = {
-                            if (!isTituloValid && titulo.isNotEmpty()) {
-                                Text("El título es obligatorio", color = Color(0xFFFF6B6B))
-                            }
-                        }
+                        )
                     )
 
                     OutlinedTextField(
@@ -100,31 +81,8 @@ fun CrearPlaylistScreen(
                             descripcion = it
                             errorMessage = null
                         },
-                        label = { Text("Descripción *", color = Color.White) },
+                        label = { Text("Descripción", color = Color.White) },
                         modifier = Modifier.fillMaxWidth(),
-                        isError = !isDescripcionValid && descripcion.isNotEmpty(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.White,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedLabelColor = Color.White,
-                            unfocusedLabelColor = Color.Gray,
-                            cursorColor = Color.White,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
-                        supportingText = {
-                            if (!isDescripcionValid && descripcion.isNotEmpty()) {
-                                Text("La descripción es obligatoria", color = Color(0xFFFF6B6B))
-                            }
-                        }
-                    )
-
-                    OutlinedTextField(
-                        value = genre,
-                        onValueChange = { genre = it },
-                        label = { Text("Género", color = Color.White) },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Rock, Jazz, Hip Hop, etc.", color = Color.Gray) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
                             unfocusedBorderColor = Color.Gray,
@@ -142,32 +100,8 @@ fun CrearPlaylistScreen(
                             vinilos = it
                             errorMessage = null
                         },
-                        label = { Text("Vinilos (separados por coma) *", color = Color.White) },
+                        label = { Text("Vinilos (separados por coma)", color = Color.White) },
                         modifier = Modifier.fillMaxWidth(),
-                        isError = !isVinilosValid && vinilos.isNotEmpty(),
-                        placeholder = { Text("Led Zeppelin - IV, Pink Floyd - DSOTM", color = Color.Gray) },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.White,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedLabelColor = Color.White,
-                            unfocusedLabelColor = Color.Gray,
-                            cursorColor = Color.White,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
-                        supportingText = {
-                            if (!isVinilosValid && vinilos.isNotEmpty()) {
-                                Text("Debes agregar al menos un vinilo", color = Color(0xFFFF6B6B))
-                            }
-                        }
-                    )
-
-                    OutlinedTextField(
-                        value = tags,
-                        onValueChange = { tags = it },
-                        label = { Text("Etiquetas (separadas por coma)", color = Color.White) },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("clásico, vintage, colección", color = Color.Gray) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
                             unfocusedBorderColor = Color.Gray,
@@ -178,28 +112,6 @@ fun CrearPlaylistScreen(
                             unfocusedTextColor = Color.White
                         )
                     )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Playlist pública",
-                            color = Color.White,
-                            fontSize = 16.sp
-                        )
-                        Switch(
-                            checked = isPublic,
-                            onCheckedChange = { isPublic = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = Color(0xFF4CAF50),
-                                uncheckedThumbColor = Color.Gray,
-                                uncheckedTrackColor = Color(0xFF424242)
-                            )
-                        )
-                    }
 
                     errorMessage?.let {
                         Text(
@@ -215,25 +127,16 @@ fun CrearPlaylistScreen(
                     ) {
                         Button(
                             onClick = {
-                                if (!isFormValid) {
-                                    errorMessage = "Por favor, completa todos los campos obligatorios"
+                                if (titulo.isBlank() || descripcion.isBlank() || vinilos.isBlank()) {
+                                    errorMessage = "Por favor, completa todos los campos"
                                     return@Button
                                 }
-                                val listaVinilos = vinilos.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                                val listaTags = if (tags.isNotEmpty()) {
-                                    tags.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                                } else {
-                                    emptyList()
-                                }
-                                
+                                val lista = vinilos.split(",").map { it.trim() }
                                 viewModel.insertPlaylist(
                                     Playlist(
                                         titulo = titulo,
                                         descripcion = descripcion,
-                                        vinilos = listaVinilos,
-                                        genre = genre,
-                                        tags = listaTags,
-                                        isPublic = isPublic
+                                        vinilos = lista
                                     )
                                 )
                                 onBack()
@@ -241,7 +144,6 @@ fun CrearPlaylistScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(50.dp),
-                            enabled = isFormValid,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.White,
                                 contentColor = Color.Black

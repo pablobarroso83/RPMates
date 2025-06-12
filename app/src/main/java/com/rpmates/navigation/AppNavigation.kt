@@ -10,10 +10,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.rpmates.screens.CrearPlaylistScreen
 import com.rpmates.screens.DetallePlaylistScreen
-import com.rpmates.screens.FavoritesScreen
 import com.rpmates.screens.HomeScreen
 import com.rpmates.screens.LoginScreen
-import com.rpmates.screens.SearchScreen
 import com.rpmates.screens.SecondScreen
 import com.rpmates.screens.SplashScreen
 import androidx.compose.ui.platform.LocalContext
@@ -22,6 +20,7 @@ import com.rpmates.viewmodel.PlayListViewModel
 import com.rpmates.RPMatesApplication
 import com.rpmates.screens.RegisterScreen
 import com.rpmates.viewmodel.UserViewModel
+
 
 @Composable
 fun AppNavigation() {
@@ -89,8 +88,6 @@ fun AppNavigation() {
             HomeScreen(
                 onPlaylistClick = { id -> navController.navigate("DetallePlaylistScreen/$id") },
                 onCrear = { navController.navigate("CrearScreen") },
-                onFavoritesClick = { navController.navigate("FavoritesScreen") },
-                onSearchClick = { navController.navigate("SearchScreen") },
                 viewModel = viewModel,
                 userViewModel = userViewModel
             )
@@ -100,24 +97,6 @@ fun AppNavigation() {
             CrearPlaylistScreen(
                 onBack = { navController.popBackStack() },
                 viewModel = viewModel
-            )
-        }
-
-        composable("FavoritesScreen") {
-            FavoritesScreen(
-                onBack = { navController.navigateUp() },
-                onPlaylistClick = { id -> navController.navigate("DetallePlaylistScreen/$id") },
-                viewModel = viewModel,
-                userViewModel = userViewModel
-            )
-        }
-
-        composable("SearchScreen") {
-            SearchScreen(
-                onBack = { navController.navigateUp() },
-                onPlaylistClick = { id -> navController.navigate("DetallePlaylistScreen/$id") },
-                viewModel = viewModel,
-                userViewModel = userViewModel
             )
         }
         

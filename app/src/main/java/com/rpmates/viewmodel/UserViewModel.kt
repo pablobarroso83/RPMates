@@ -14,33 +14,6 @@ class UserViewModel(private val repository: Repository) : ViewModel() {
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser
 
-    init {
-        // Crear superusuario si no existe
-        viewModelScope.launch {
-            createSuperUserIfNeeded()
-        }
-    }
-
-    private suspend fun createSuperUserIfNeeded() {
-        try {
-            val adminCount = repository.getAdminCount()
-            if (adminCount == 0) {
-                val superUser = User(
-                    username = "admin",
-                    password = PasswordUtils.hashPassword("admin123"),
-                    email = "admin@rpmates.com",
-                    firstName = "Super",
-                    lastName = "Admin",
-                    isAdmin = true
-                )
-                repository.insertUser(superUser)
-            }
-        } catch (e: Exception) {
-            // Log error but don't crash the app
-            e.printStackTrace()
-        }
-    }
-
     suspend fun login(username: String, password: String): Result<Unit> {
         return try {
             val user = repository.getUserByUsername(username)
@@ -58,40 +31,20 @@ class UserViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
-    suspend fun register(
-        username: String, 
-        password: String,
-        email: String = "",
-        firstName: String = "",
-        lastName: String = "",
-        phoneNumber: String = "",
-        dateOfBirth: String = ""
-    ): Result<Unit> {
+    suspend fun register(username: String, password: String): Result<Unit> {
         return try {
-            // Verificar si el usuario ya existe
             if (repository.getUserByUsername(username) != null) {
-                return Result.failure(Exception("El usuario ya existe"))
+                Result.failure(Exception("El usuario ya existe"))
+            } else {
+                val hashedPassword = PasswordUtils.hashPassword(password)
+                val newUser = User(
+                    username = username,
+                    password = hashedPassword // Guardamos la contraseña hasheada
+                )
+                val userId = repository.insertUser(newUser)
+                _currentUser.value = newUser.copy(id = userId.toInt())
+                Result.success(Unit)
             }
-            
-            // Verificar si el email ya existe
-            if (email.isNotEmpty() && repository.getUserByEmail(email) != null) {
-                return Result.failure(Exception("El email ya está registrado"))
-            }
-            
-            val hashedPassword = PasswordUtils.hashPassword(password)
-            val newUser = User(
-                username = username,
-                password = hashedPassword,
-                email = email,
-                firstName = firstName,
-                lastName = lastName,
-                phoneNumber = phoneNumber,
-                dateOfBirth = dateOfBirth,
-                isAdmin = false
-            )
-            val userId = repository.insertUser(newUser)
-            _currentUser.value = newUser.copy(id = userId.toInt())
-            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(Exception("Error al registrar usuario: ${e.message}"))
         }
@@ -108,16 +61,6 @@ class UserViewModel(private val repository: Repository) : ViewModel() {
                     _currentUser.value = refreshedUser
                 }
             }
-        }
-    }
-
-    suspend fun updateUser(user: User): Result<Unit> {
-        return try {
-            repository.updateUser(user)
-            _currentUser.value = user
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(Exception("Error al actualizar usuario: ${e.message}"))
         }
     }
 

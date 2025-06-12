@@ -9,7 +9,6 @@ import com.rpmates.data.local.entities.Playlist
 import com.rpmates.data.local.entities.User
 import com.rpmates.data.local.models.ComentarioConUsuario
 import com.rpmates.data.local.models.PlaylistConFavorito
-import com.rpmates.screens.FavoritePlaylistsState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,23 +25,7 @@ class PlayListViewModel(
     private val _currentPlaylist = MutableStateFlow<PlaylistConFavorito?>(null)
     val currentPlaylist: MutableStateFlow<PlaylistConFavorito?> = _currentPlaylist
 
-    // Estados para búsqueda y paginación
-    private val _searchResults = MutableStateFlow<List<PlaylistConFavorito>>(emptyList())
-    val searchResults: StateFlow<List<PlaylistConFavorito>> = _searchResults
-
-    private val _isSearchLoading = MutableStateFlow(false)
-    val isSearchLoading: StateFlow<Boolean> = _isSearchLoading
-
-    private var currentSearchQuery = ""
-    private var currentSortBy = "date_desc"
-    private var currentOffset = 0
-    private val pageSize = 20
-
-    // Estados para favoritos
-    private val _favoritePlaylistsState = MutableStateFlow<FavoritePlaylistsState>(FavoritePlaylistsState.Loading)
-    val favoritePlaylistsState: StateFlow<FavoritePlaylistsState> = _favoritePlaylistsState
-
-    val allPlaylists: Flow<List<PlaylistConFavorito>> = _currentUser.flatMapLatest { user ->
+    val allPlaylists: Flow<List<PlaylistConFavorito>> = _currentUser.flatMapLatest { user -> // Tiene en cuenta solo el ultimo flow si llega otro se cancela el anterior
         if (user != null) {
             repository.getAllPlaylists(user.id)
         } else {
@@ -64,7 +47,7 @@ class PlayListViewModel(
 
     fun toggleFavorita(playlistId: Int) {
         viewModelScope.launch {
-            _currentUser.value?.let { user ->
+            _currentUser.value?.let { user -> // Let para que ejecute solo si no es null
                 try {
                     repository.toggleFavorita(user.id, playlistId)
                     userViewModel.refreshUser()
@@ -79,85 +62,8 @@ class PlayListViewModel(
     }
 
     fun insertPlaylist(playlist: Playlist) {
-        viewModelScope.launch {
-            _currentUser.value?.let { user ->
-                val playlistWithUser = playlist.copy(createdBy = user.id)
-                repository.insertPlaylist(playlistWithUser)
-            }
-        }
-    }
-
-    // Búsqueda con paginación
-    fun searchPlaylists(query: String, sortBy: String = "date_desc") {
-        viewModelScope.launch {
-            _currentUser.value?.let { user ->
-                _isSearchLoading.value = true
-                currentSearchQuery = query
-                currentSortBy = sortBy
-                currentOffset = 0
-                
-                try {
-                    repository.searchPlaylists(
-                        userId = user.id,
-                        searchQuery = query,
-                        sortBy = sortBy,
-                        limit = pageSize,
-                        offset = 0
-                    ).collect { results ->
-                        _searchResults.value = results
-                        _isSearchLoading.value = false
-                    }
-                } catch (e: Exception) {
-                    _isSearchLoading.value = false
-                    e.printStackTrace()
-                }
-            }
-        }
-    }
-
-    fun loadMoreSearchResults() {
-        viewModelScope.launch {
-            _currentUser.value?.let { user ->
-                if (_isSearchLoading.value) return@launch
-                
-                _isSearchLoading.value = true
-                currentOffset += pageSize
-                
-                try {
-                    repository.searchPlaylists(
-                        userId = user.id,
-                        searchQuery = currentSearchQuery,
-                        sortBy = currentSortBy,
-                        limit = pageSize,
-                        offset = currentOffset
-                    ).collect { newResults ->
-                        _searchResults.value = _searchResults.value + newResults
-                        _isSearchLoading.value = false
-                    }
-                } catch (e: Exception) {
-                    _isSearchLoading.value = false
-                    e.printStackTrace()
-                }
-            }
-        }
-    }
-
-    fun clearSearchResults() {
-        _searchResults.value = emptyList()
-        currentOffset = 0
-    }
-
-    // Favoritos
-    fun loadFavoritePlaylistsForUser(userId: Int) {
-        viewModelScope.launch {
-            _favoritePlaylistsState.value = FavoritePlaylistsState.Loading
-            try {
-                repository.getFavoritasForUser(userId).collect { playlists ->
-                    _favoritePlaylistsState.value = FavoritePlaylistsState.Success(playlists)
-                }
-            } catch (e: Exception) {
-                _favoritePlaylistsState.value = FavoritePlaylistsState.Error(e.message ?: "Error desconocido")
-            }
+        viewModelScope.launch { // Lanza corrutina
+            repository.insertPlaylist(playlist)
         }
     }
 
@@ -176,33 +82,6 @@ class PlayListViewModel(
         }
     }
 
-    // Editar y eliminar playlists
-    fun updatePlaylist(playlist: Playlist) {
-        viewModelScope.launch {
-            try {
-                repository.updatePlaylist(playlist)
-                // Actualizar la playlist actual si es la que se está editando
-                _currentUser.value?.let { user ->
-                    repository.getPlaylistByIdWithFavorito(playlist.id, user.id)?.let { updatedPlaylist ->
-                        _currentPlaylist.value = updatedPlaylist
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    fun deletePlaylist(playlist: Playlist) {
-        viewModelScope.launch {
-            try {
-                repository.deletePlaylist(playlist)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
     class Factory(
         private val repository: Repository,
         private val userViewModel: UserViewModel
@@ -216,3 +95,4 @@ class PlayListViewModel(
         }
     }
 }
+
